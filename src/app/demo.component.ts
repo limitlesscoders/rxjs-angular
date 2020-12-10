@@ -1,6 +1,15 @@
 import { Component, Input, OnInit } from "@angular/core";
-import { BehaviorSubject, Observable, ReplaySubject, Subject } from "rxjs";
-
+import {
+  BehaviorSubject,
+  Observable,
+  ReplaySubject,
+  Subject,
+  timer,
+  of,
+  pipe,
+  combineLatest
+} from "rxjs";
+import { map, filter } from "rxjs/operators";
 @Component({
   selector: "demo",
   template: `
@@ -25,12 +34,12 @@ import { BehaviorSubject, Observable, ReplaySubject, Subject } from "rxjs";
 
       <h4>RxJs Operators</h4>
 
-      <button mat-raised-button>combineLatest</button>
-      <button mat-raised-button>forkJoin</button>
+      <button mat-raised-button (click)="showcaseCombineLatest()">
+        combineLatest
+      </button>
+      <button mat-raised-button>pipe, filter and map</button>
       <button mat-raised-button>switchMap</button>
       <button mat-raised-button>flatMap</button>
-      <button mat-raised-button>pipe</button>
-      <button mat-raised-button>unsubscribe</button>
     </div>
   `,
   styles: [
@@ -97,5 +106,60 @@ export class DemoComponent implements OnInit {
     });
     behaviorSubject.next("Message 1");
     behaviorSubject.unsubscribe();
+  }
+
+  showcaseCombineLatest() {
+    // async data stream
+    // Emit data immediately and then every time after 1 seconds
+    const dataStream1$ = timer(0, 1000);
+
+    // Emit data immediately and then every time after 2 seconds
+    const dataStream2$ = timer(0, 2000);
+
+    // Emit data immediately 3 second and then every time after 3 seconds
+    const dataStream3$ = timer(0, 3000);
+    // when one timer emits, emit the latest values from each timer as an array
+    const subscription = combineLatest(
+      dataStream1$,
+      dataStream2$,
+      dataStream3$
+    ).subscribe(([timerValOne, timerValTwo, timerValThree]) => {
+      console.log(
+        `Timer One Latest: ${timerValOne},
+        Timer Two Latest: ${timerValTwo},
+        Timer Three Latest: ${timerValThree}`
+      );
+    });
+
+    setTimeout(() => {
+      subscription.unsubscribe();
+    }, 5000);
+  }
+
+  showcasePipeAndFilter() {
+    const fancyCars = of([
+      {
+        brand: "porsche",
+        model: "911"
+      },
+      {
+        brand: "porsche",
+        model: "macan"
+      },
+      {
+        brand: "ferarri",
+        model: "458"
+      },
+      {
+        brand: "lamborghini",
+        model: "urus"
+      }
+    ]);
+
+    // get data as brand+model string. Result:
+    // ["porsche 911", "porsche macan", "ferarri 458", "lamborghini urus"]
+    fancyCars
+      .pipe(map(cars => cars.map(car => `${car.brand} ${car.model}`)))
+      .subscribe(cars => console.log(cars));
   }
 }
