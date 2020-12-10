@@ -6,10 +6,10 @@ import {
   Subject,
   timer,
   of,
-  pipe,
-  combineLatest
+  combineLatest,
+  from
 } from "rxjs";
-import { map, filter } from "rxjs/operators";
+import { map, mergeMap, switchMap, delay } from "rxjs/operators";
 @Component({
   selector: "demo",
   template: `
@@ -37,9 +37,11 @@ import { map, filter } from "rxjs/operators";
       <button mat-raised-button (click)="showcaseCombineLatest()">
         combineLatest
       </button>
-      <button mat-raised-button>pipe, filter and map</button>
-      <button mat-raised-button>switchMap</button>
-      <button mat-raised-button>flatMap</button>
+      <button mat-raised-button (click)="showcasePipeAndFilter()">
+        pipe, filter and map
+      </button>
+      <button mat-raised-button (click)="showcaseMergeMap()">mergeMap</button>
+      <button mat-raised-button (click)="showcaseSwitchMap()">switchMap</button>
     </div>
   `,
   styles: [
@@ -156,10 +158,29 @@ export class DemoComponent implements OnInit {
       }
     ]);
 
-    // get data as brand+model string. Result:
-    // ["porsche 911", "porsche macan", "ferarri 458", "lamborghini urus"]
-    fancyCars
-      .pipe(map(cars => cars.map(car => `${car.brand} ${car.model}`)))
-      .subscribe(cars => console.log(cars));
+    let result = fancyCars
+      .pipe(map(cars => cars.filter(car => car.brand === "porsche")))
+      .subscribe(data => console.log("Porsche cars ", data));
+    result.unsubscribe();
+  }
+
+  showcaseMergeMap() {
+    const getData = param => {
+      return of(`retrieved new data with param ${param}`).pipe(delay(1000));
+    };
+
+    from([1, 2, 3, 4])
+      .pipe(mergeMap(param => getData(param)))
+      .subscribe(val => console.log(val));
+  }
+
+  showcaseSwitchMap() {
+    const getData = param => {
+      return of(`retrieved new data with param ${param}`).pipe(delay(1000));
+    };
+
+    from([1, 2, 3, 4])
+      .pipe(switchMap(param => getData(param)))
+      .subscribe(val => console.log(val));
   }
 }
