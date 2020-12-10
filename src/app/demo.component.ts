@@ -42,6 +42,7 @@ import { map, mergeMap, switchMap, delay } from "rxjs/operators";
       </button>
       <button mat-raised-button (click)="showcaseMergeMap()">mergeMap</button>
       <button mat-raised-button (click)="showcaseSwitchMap()">switchMap</button>
+      <a href="https://learnrxjs.io">Complete list </a>
     </div>
   `,
   styles: [
@@ -69,8 +70,8 @@ export class DemoComponent implements OnInit {
   createObservable() {
     let observable = Observable.create(observer => {
       observer.next("Message 1");
-      observer.next("2");
-      observer.next("3");
+      observer.next("Message 2");
+      observer.next("MEssage 3");
     });
 
     //observable.next("444");
