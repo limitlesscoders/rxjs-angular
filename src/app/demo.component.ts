@@ -9,7 +9,14 @@ import {
   combineLatest,
   from
 } from "rxjs";
-import { map, mergeMap, switchMap, delay } from "rxjs/operators";
+import {
+  map,
+  mergeMap,
+  switchMap,
+  delay,
+  debounceTime,
+  distinctUntilKeyChanged
+} from "rxjs/operators";
 @Component({
   selector: "demo",
   template: `
@@ -37,7 +44,7 @@ import { map, mergeMap, switchMap, delay } from "rxjs/operators";
       <button mat-raised-button (click)="showcaseCombineLatest()">
         combineLatest
       </button>
-      <button mat-raised-button (click)="showcasePipeAndFilter()">
+      <button mat-raised-button (click)="showcasePipe()">
         pipe, filter and map
       </button>
       <button mat-raised-button (click)="showcaseMergeMap()">mergeMap</button>
@@ -86,12 +93,13 @@ export class DemoComponent implements OnInit {
     subject.subscribe(value => {
       console.log("Subject data", value);
     });
-    subject.next("2");
+    subject.next("New Message");
+    subject.next("New Message -- 2");
     subject.unsubscribe();
   }
 
   createReplaySubject() {
-    let replaySubject = new ReplaySubject();
+    let replaySubject = new ReplaySubject(1);
     replaySubject.next("This time I caught you! -- 1");
     replaySubject.next("This time I caught you! -- 2");
     replaySubject.subscribe(value => {
@@ -107,6 +115,7 @@ export class DemoComponent implements OnInit {
     behaviorSubject.subscribe(value => {
       console.log("Behavior Subject data", value);
     });
+    console.log("get val", behaviorSubject.getValue());
     behaviorSubject.next("Message 1");
     behaviorSubject.unsubscribe();
   }
@@ -139,7 +148,7 @@ export class DemoComponent implements OnInit {
     }, 5000);
   }
 
-  showcasePipeAndFilter() {
+  showcasePipe() {
     const fancyCars = of([
       {
         brand: "porsche",
@@ -160,14 +169,18 @@ export class DemoComponent implements OnInit {
     ]);
 
     let result = fancyCars
-      .pipe(map(cars => cars.filter(car => car.brand === "porsche")))
+      .pipe(
+        debounceTime(250),
+        map(cars => cars.filter(car => car.brand === "porsche"))
+      )
       .subscribe(data => console.log("Porsche cars ", data));
     result.unsubscribe();
   }
 
   showcaseMergeMap() {
+    // async data call
     const getData = param => {
-      return of(`retrieved new data with param ${param}`).pipe(delay(1000));
+      return of(`retrieved new data with param ${param}`).pipe(delay(5000));
     };
 
     from([1, 2, 3, 4])
